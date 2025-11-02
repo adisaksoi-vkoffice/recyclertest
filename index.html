@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pak Chong AI Recycler Prototype</title>
+</head>
+<body>
+    <script>
+        // 1. วาง URL Web App ของคุณตรงนี้ (ต้องเป็น URL ที่ลงท้ายด้วย /exec)
+        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/a/macros/vk.ac.th/s/AKfycbxkj1xqL1uGtxOfk9tXUF-rj5Xo-I7O4HPzffKl0I82p8W3nSWFU80_e12lW3ODKdg5/exec'; // <--- ต้องแก้ไข URL นี้
+
+        // 2. ฟังก์ชันส่งข้อมูลไปยัง Google Sheet
+        async function sendDataToSheet(predictedClass, confidenceScore) {
+            const data = {
+                predictedClass: predictedClass,
+                confidence: confidenceScore.toFixed(4)
+            };
+
+            fetch(GOOGLE_APP_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log("Data sent initiated.");
+            })
+            .catch(error => {
+                console.error('Error sending data:', error);
+            });
+        }
+
+        // 3. ฟังก์ชัน predict() ของ Teachable Machine (ต้องเรียกใช้ sendDataToSheet)
+        async function predict() {
+            // โค้ด Teachable Machine ทำนายผล (สมมติว่าโค้ดทั้งหมดถูกต้อง)
+            const prediction = await model.predict(webcam.canvas);
+            
+            // เรียงลำดับผลลัพธ์เพื่อหาค่าความมั่นใจสูงสุด
+            prediction.sort((a, b) => b.probability - a.probability);
+            const topPrediction = prediction[0];
+
+            // *** เรียกใช้ฟังก์ชันส่งข้อมูล POST ที่นี่ ***
+            sendDataToSheet(topPrediction.className, topPrediction.probability);
+
+            // ... โค้ดแสดงผลลัพธ์ในหน้าจอ ...
+        }
+    </script>
+</body>
+</html>
